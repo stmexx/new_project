@@ -1,4 +1,18 @@
+import quopri
+
+
 class Application:
+
+    def decode_value(val):
+        val_b = bytes(val.replace('%', '=').replace("+", " "), 'UTF-8')
+        val_decode_str = quopri.decodestring(val_b)
+        return val_decode_str.decode('UTF-8')
+
+    def add_route(self, url):
+        def inner(view):
+            self.urlpatterns[url] = view
+
+        return inner
 
     def parse_input_data(self, data: str):
         result = {}
@@ -23,14 +37,17 @@ class Application:
         data = env['wsgi.input'].read(content_length) if content_length > 0 else b''
         return data
 
-    def __init__(self, urlpatterns: dict, front_controllers: list):
+    def __init__(self, urlpatterns, front_controllers):
         self.urlpatterns = urlpatterns
         self.front_controllers = front_controllers
 
     def __call__(self, env, start_response):
+
         path = env['PATH_INFO']
+
         if not path.endswith('/'):
             path = f'{path}/'
+
         method = env['REQUEST_METHOD']
         data = self.get_wsgi_input_data(env)
         data = self.parse_wsgi_input_data(data)
