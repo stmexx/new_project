@@ -1,6 +1,6 @@
 from wavy import render, Application
 from models import TrainingSite
-from logging_mod import Logger
+from logging_mod import Logger, debug
 
 site = TrainingSite()
 logger = Logger('main')
@@ -12,6 +12,7 @@ def main_view(request):
     return '200 OK', render('course_list.html', objects_list=site.courses)
 
 
+@debug
 def create_course(request):
     if request['method'] == 'POST':
         data = request['data']
@@ -20,7 +21,6 @@ def create_course(request):
         category = None
         if category_id:
             category = site.find_category_by_id(int(category_id))
-
             course = site.create_course('record', name, category)
             site.courses.append(course)
         return '200 OK', render('create_course.html')
@@ -45,24 +45,6 @@ def create_category(request):
     else:
         categories = site.categories
         return '200 OK', render('create_category.html', categories=categories)
-
-
-def copy_course(request):
-    request_params = request['request_params']
-    name = request_params['name']
-    old_course = site.get_course(name)
-    if old_course:
-        new_name = f'copy_{name}'
-        new_course = old_course.clone()
-        new_course.name = new_name
-        site.courses.append(new_course)
-
-    return '200 OK', render('course_list.html', objects_list=site.courses)
-
-
-def category_list(request):
-    logger.log('Список категорий')
-    return '200 OK', render('category_list.html', objects_list=site.categories)
 
 
 def index(request):
@@ -90,8 +72,8 @@ urlpatterns = {
     '/': main_view,
     '/create-course/': create_course,
     '/create-category/': create_category,
-    '/copy-course/': copy_course,
-    '/category-list/': category_list,
+    # '/copy-course/': copy_course,
+    # '/category-list/': category_list,
     '/index/': index,
     '/contact/': contact_view,
     '/about/': about_view
@@ -108,3 +90,29 @@ front_controllers = [
 ]
 
 application = Application(urlpatterns, front_controllers)
+
+
+# application = DebugApplication(urlpatterns, front_controllers)
+# application = FakeApplication(urlpatterns, front_controllers)
+
+
+@application.add_route('/copy-course/')
+def copy_course(request):
+    request_params = request['request_params']
+    name = request_params['name']
+    old_course = site.get_course(name)
+    if old_course:
+        new_name = f'copy_{name}'
+        new_course = old_course.clone()
+        new_course.name = new_name
+        site.courses.append(new_course)
+
+    return '200 OK', render('course_list.html', objects_list=site.courses)
+
+
+@application.add_route('/category-list/')
+def category_list(request):
+    logger.log('Список категорий')
+    return '200 OK', render('category_list.html', objects_list=site.categories)
+
+
