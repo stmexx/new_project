@@ -1,4 +1,6 @@
 import quopri
+from wsgiref.util import setup_testing_defaults
+
 
 
 class Application:
@@ -42,9 +44,8 @@ class Application:
         self.front_controllers = front_controllers
 
     def __call__(self, env, start_response):
-
+        setup_testing_defaults(env)
         path = env['PATH_INFO']
-
         if not path.endswith('/'):
             path = f'{path}/'
 
@@ -70,7 +71,7 @@ class Application:
             start_response('404 NOT FOUND', [('Content-Type', 'text/html')])
             return [b"Not Found"]
 
-'''
+
 class DebugApplication(Application):
 
     def __init__(self, urlpatterns, front_controllers):
@@ -93,4 +94,3 @@ class FakeApplication(Application):
     def __call__(self, env, start_response):
         start_response('200 OK', [('Content-Type', 'text/html')])
         return [b'Hello from Fake']
-'''
